@@ -153,16 +153,43 @@
 
     <script>
       // Durasi countdown (48 jam)
-      let duration = 48 * 60 * 60;
+      const COUNTDOWN_DURATION = 48 * 60 * 60 * 1000; // dalam milidetik
+      const STORAGE_KEY = "shtka_end_time";
 
       const countdown = document.getElementById("countdown");
       const btn = document.getElementById("downloadBtn");
       const msg = document.getElementById("expiredMessage");
 
-      const timer = setInterval(function () {
-        let hours = Math.floor(duration / 3600);
-        let minutes = Math.floor((duration % 3600) / 60);
-        let seconds = duration % 60;
+      // Ambil waktu selesai dari localStorage
+      let endTime = localStorage.getItem(STORAGE_KEY);
+
+      // Jika belum ada, buat baru
+      if (!endTime) {
+        endTime = Date.now() + COUNTDOWN_DURATION;
+        localStorage.setItem(STORAGE_KEY, endTime);
+      } else {
+        endTime = parseInt(endTime);
+      }
+
+      function updateCountdown() {
+        const now = Date.now();
+        const distance = endTime - now;
+
+        if (distance <= 0) {
+          countdown.innerHTML = "00:00:00";
+
+          btn.classList.add("disabled");
+          btn.removeAttribute("href");
+
+          msg.innerHTML = "⛔ Link telah dinonaktifkan.";
+
+          clearInterval(timer);
+          return;
+        }
+
+        const hours = Math.floor(distance / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
         countdown.innerHTML =
           String(hours).padStart(2, "0") +
@@ -170,20 +197,10 @@
           String(minutes).padStart(2, "0") +
           ":" +
           String(seconds).padStart(2, "0");
+      }
 
-        if (duration <= 0) {
-          clearInterval(timer);
-
-          countdown.innerHTML = "00:00:00";
-
-          btn.classList.add("disabled");
-          btn.removeAttribute("href");
-
-          msg.innerHTML = "⛔ Link telah dinonaktifkan.";
-        }
-
-        duration--;
-      }, 1000);
+      updateCountdown();
+      const timer = setInterval(updateCountdown, 1000);
     </script>
   </body>
 </html>
